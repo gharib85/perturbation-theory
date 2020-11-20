@@ -1,6 +1,6 @@
 import torch
 
-class DPT:
+class IPT:
 
     def __init__(self, matrix, diagonal = None):
         if torch.is_tensor(matrix):
@@ -23,6 +23,7 @@ class DPT:
             W = deltaV - torch.matmul(V, torch.diag(torch.diag(deltaV)))
             return(id - torch.mul(theta, W))
 
+
         theta = torch.triu(1/(d.unsqueeze(1) - d), diagonal = 1)
         theta = theta - theta.t()
 
@@ -44,7 +45,7 @@ class DPT:
 
             it += 1
             W = F(V, id, theta, delta)
-            err = torch.linalg.norm(W - V)/torch.linalg.norm(V)
+            err = torch.max(torch.abs(W-V))
             V = W
 
         D = torch.diag(d + torch.diag(torch.matmul(delta, V)))
@@ -55,6 +56,8 @@ class DPT:
             return(D, V)
         else:
             return(V)
+
+    def eigs(self, k = 0, order = 500, d = None, v0 = None, trace = False):
 
         M = self.matrix
         D = self.diagonal
@@ -82,9 +85,8 @@ class DPT:
         while err > 2*torch.finfo(M.dtype).eps and l <= order:
             # On the GPU the error condition is the time bottleneck
             l += 1
-
             w = f(v, e, t, delta)
-            err = torch.linalg.norm(w - v)/torch.linalg.norm(v)
+            err = torch.max(torch.abs(w-v))
             v = w
             d.append(D[k] + torch.matmul(delta, v)[k])
         print('Residual DPT:', torch.linalg.norm(M @ v - d[-1] * v).item())
@@ -93,8 +95,6 @@ class DPT:
             return(d[-1], v, d)
         else:
             return(d[-1], v)
-
-    def eigs_sparse()
 
 class RSPT:
 
